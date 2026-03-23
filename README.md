@@ -8,7 +8,7 @@ This website showcases my skills, projects, and achievements.
 ## 🔗 Live Website
 
 👉 **Visit here:**
-https://shoaib3626.github.io/myportfolio-/
+https://shoaib3626.github.io/portfolio/
 
 ---
 
