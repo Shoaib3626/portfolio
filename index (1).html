@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Shoaib Akhtar · AI Engineer | Cinematic 3D Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #010105;
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 3D Canvas Background */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Advanced Custom Cursor */
+        .cursor {
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: 0.05s;
+        }
+        .cursor-follower {
+            width: 45px;
+            height: 45px;
+            border: 2px solid rgba(59,130,246,0.6);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .cursor-glow {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(59,130,246,0.15), transparent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9997;
+            transition: 0.3s;
+            filter: blur(20px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f121f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero Section with Glitch Effect */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 3rem;
+            position: relative;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(59,130,246,0.1);
+            backdrop-filter: blur(12px);
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(59,130,246,0.4);
+            margin-bottom: 1.5rem;
+            animation: badgePulse 2s infinite;
+        }
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); border-color: rgba(59,130,246,0.8); }
+        }
+
+        .glitch-wrapper {
+            position: relative;
+        }
+        .glitch-text {
+            font-size: 5.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #3b82f6, #a855f7, #ec489a, #f59e0b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-size: 400% 400%;
+            animation: gradientFlow 6s ease infinite;
+            position: relative;
+        }
+        @keyframes gradientFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #fff, #3b82f6, #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .glitch-text::before {
+            animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+        }
+        .glitch-text::after {
+            animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+            left: -2px;
+            text-shadow: 2px 0 #00fff9;
+        }
+        @keyframes glitch {
+            0% { transform: skew(0deg, 0deg); opacity: 0.8; }
+            20% { transform: skew(2deg, 1deg); opacity: 0.9; }
+            40% { transform: skew(-2deg, -1deg); opacity: 0.8; }
+            60% { transform: skew(1deg, 0.5deg); opacity: 0.9; }
+            80% { transform: skew(-1deg, -0.5deg); opacity: 0.8; }
+            100% { transform: skew(0deg, 0deg); opacity: 0.8; }
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: #9ca3af;
+            margin: 1.5rem 0;
+            max-width: 550px;
+            line-height: 1.7;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.02);
+            backdrop-filter: blur(12px);
+            padding: 1rem 1.8rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(59,130,246,0.2);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59,130,246,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            background: rgba(59,130,246,0.1);
+        }
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .profile-wrapper {
+            position: relative;
+            width: 380px;
+            height: 380px;
+        }
+        .profile-rings {
+            position: absolute;
+            inset: -15px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #3b82f6, #a855f7, #ec489a, #3b82f6);
+            animation: rotateRing 6s linear infinite;
+            filter: blur(8px);
+            opacity: 0.6;
+        }
+        @keyframes rotateRing {
+            100% { transform: rotate(360deg); }
+        }
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            padding: 4px;
+            position: relative;
+            z-index: 2;
+            animation: float 5s ease-in-out infinite;
+        }
+        .profile-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.4s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            z-index: -1;
+        }
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: 0 5px 20px rgba(59,130,246,0.3); }
+        .btn-outline { background: rgba(255,255,255,0.03); color: white; border: 1px solid rgba(59,130,246,0.5); backdrop-filter: blur(10px); }
+        .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .btn:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(59,130,246,0.4); }
+
+        /* Glass Card with Holographic Effect */
+        .glass-card {
+            background: rgba(10, 20, 35, 0.35);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(59,130,246,0.2);
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(59,130,246,0.5);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3), 0 0 30px rgba(59,130,246,0.1);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: inline-block;
+            position: relative;
+        }
+        .section-title i {
+            margin-right: 0.8rem;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #a855f7, #ec489a);
+            border-radius: 3px;
+            animation: linePulse 2s infinite;
+        }
+        @keyframes linePulse {
+            0%, 100% { width: 60%; opacity: 0.7; }
+            50% { width: 100%; opacity: 1; }
+        }
+
+        /* Skills Grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+        }
+        .skill-category {
+            background: rgba(59,130,246,0.05);
+            border-radius: 1rem;
+            padding: 1.2rem;
+            border-left: 3px solid #3b82f6;
+            transition: all 0.4s;
+        }
+        .skill-category:hover {
+            transform: translateX(8px);
+            background: rgba(59,130,246,0.12);
+        }
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+        .skill-tag {
+            background: rgba(59,130,246,0.2);
+            padding: 0.35rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            cursor: default;
+        }
+        .skill-tag:hover {
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            transform: scale(1.08);
+        }
+
+        /* Projects Grid 3D */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+        }
+        .project-card {
+            background: rgba(5, 12, 22, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 1.5rem;
+            padding: 1.8rem;
+            border: 1px solid rgba(59,130,246,0.3);
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .project-card:hover {
+            transform: translateY(-12px) rotateX(3deg);
+            border-color: #3b82f6;
+            box-shadow: 0 30px 50px rgba(59,130,246,0.2);
+        }
+        .project-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            animation: iconPulse 3s infinite;
+        }
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .project-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+        .project-date {
+            font-size: 0.7rem;
+            color: #3b82f6;
+            margin: 0.3rem 0 0.8rem;
+        }
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .tech-badge {
+            background: rgba(59,130,246,0.25);
+            padding: 0.25rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        /* Timeline Animation */
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 1rem;
+            transition: all 0.4s;
+            position: relative;
+        }
+        .timeline-item:hover {
+            background: rgba(59,130,246,0.1);
+            transform: translateX(10px);
+        }
+        .timeline-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            animation: iconRotate 5s linear infinite;
+        }
+        @keyframes iconRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            transform: translateX(500px);
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            z-index: 1000;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .toast.show { transform: translateX(0); }
+
+        @media (max-width: 768px) {
+            .glitch-text { font-size: 2.5rem; }
+            .hero { flex-direction: column; text-align: center; }
+            .stats { justify-content: center; }
+            .skills-grid { grid-template-columns: 1fr; }
+            .profile-wrapper { width: 280px; height: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    <div class="cursor-glow"></div>
+    <canvas id="canvas-bg"></canvas>
+    
+    <div class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-left">
+                    <div class="badge">
+                        <i class="fas fa-robot fa-fw"></i> 
+                        <span id="rotating-text">AI ENGINEER</span>
+                    </div>
+                    <div class="glitch-wrapper">
+                        <div class="glitch-text" data-text="Shoaib Akhtar">Shoaib Akhtar</div>
+                    </div>
+                    <p class="hero-desc">Building intelligent systems with Computer Vision, Generative AI, and Full-Stack Excellence. 1st Place Winner @ IIT Ropar AI Fusion Hackathon among 1000+ teams.</p>
+                    <div class="stats">
+                        <div class="stat-card"><div class="stat-number">3</div><div>Major Projects</div></div>
+                        <div class="stat-card"><div class="stat-number">🏆 1st</div><div>IIT Ropar</div></div>
+                        <div class="stat-card"><div class="stat-number">5+</div><div>Certifications</div></div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <a href="https://www.linkedin.com/in/shoaib-akhtar-1a9aa3297" target="_blank" class="btn btn-primary"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                        <a href="https://github.com/Shoaib3626" target="_blank" class="btn btn-outline"><i class="fab fa-github"></i> GitHub</a>
+                        <a href="mailto:shoaibakhtar3626@gmail.com" class="btn btn-outline"><i class="fas fa-envelope"></i> Email</a>
+                        <button id="downloadCVBtn" class="btn btn-download"><i class="fas fa-download"></i> Download CV</button>
+                    </div>
+                </div>
+                <div class="profile-wrapper">
+                    <div class="profile-rings"></div>
+                    <div class="profile-img">
+                       <img src="shoaib.jpg.jpg" alt="Shoaib Akhtar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Me -->
+            <div class="glass-card" data-aos="fade-up" data-aos-duration="1000">
+                <h2 class="section-title"><i class="fas fa-user-astronaut"></i> About Me</h2>
+                <p style="font-size: 1rem; line-height: 1.8;">I'm Shoaib Akhtar, an AI Engineer and Full-Stack Developer from Bihar, pursuing B.Tech CSE at Lovely Professional University. I specialize in Computer Vision, Generative AI, and intelligent systems. Secured 1st place at IIT Ropar's AI Fusion Hackathon among 1000+ teams. Passionate about solving real-world problems through innovative technology solutions.</p>
+            </div>
+
+            <!-- Skills - Exactly as CV -->
+            <div class="glass-card" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100">
+                <h2 class="section-title"><i class="fas fa-code"></i> Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-category"><h3><i class="fas fa-language"></i> Languages</h3><div class="skill-tags"><span class="skill-tag">Python</span><span class="skill-tag">C</span><span class="skill-tag">C++</span><span class="skill-tag">Java</span><span class="skill-tag">JavaScript</span></div></div>
+                    <div class="skill-category"><h3><i class="fas fa-layer-group"></i> Frameworks</h3><div class="skill-tags"><span class="skill-tag">HTML</span><span class="skill-tag">CSS</span></div></div>
+                    <div class="skill-category"><h3><i class="fas fa-tools"></i> Tools/Platforms</h3><div class="skill-tags"><span class="skill-tag">Google Colab</span><span class="skill-tag">scikit-learn</span><span class="skill-tag">TensorFlow</span><span class="skill-tag">MySQL</span></div></div>
+                    <div class="skill-category"><h3><i class="fas fa-users"></i> Soft Skills</h3><div class="skill-tags"><span class="skill-tag">Teamwork</span><span class="skill-tag">Leadership</span><span class="skill-tag">Adaptability</span><span class="skill-tag">Creativity</span><span class="skill-tag">Reliability</span><span class="skill-tag">Time Management</span></div></div>
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+                <h2 class="section-title"><i class="fas fa-rocket"></i> Projects</h2>
+                <div class="projects-grid">
+                    <div class="project-card"><div class="project-icon"><i class="fas fa-chart-line"></i></div><div class="project-title">Real-Time Process Monitoring Dashboard</div><div class="project-date">Jan-Mar 2025</div><div class="project-tech"><span class="tech-badge">Python</span><span class="tech-badge">Psutil</span><span class="tech-badge">Tkinter</span><span class="tech-badge">Matplotlib</span></div><p>Python-based dashboard providing real-time insights into CPU usage, memory consumption, and process states with GUI for process management.</p></div>
+                    <div class="project-card"><div class="project-icon"><i class="fas fa-building"></i></div><div class="project-title">Property Maintenance & Service Booking Platform</div><div class="project-date">July-Aug 2025</div><div class="project-tech"><span class="tech-badge">Python</span><span class="tech-badge">HTML/CSS</span><span class="tech-badge">JavaScript</span><span class="tech-badge">MySQL</span></div><p>User-friendly property maintenance platform with responsive web pages, seamless service requests, and real-time updates.</p></div>
+                    <div class="project-card"><div class="project-icon"><i class="fas fa-brain"></i></div><div class="project-title">PashuScan: AI-Powered Stray Animal Carcass Management</div><div class="project-date">Jan-Mar 2025</div><div class="project-tech"><span class="tech-badge">Python</span><span class="tech-badge">OpenCV</span><span class="tech-badge">TensorFlow</span><span class="tech-badge">IoT</span><span class="tech-badge">Google Maps API</span></div><p>AI-driven system for real-time detection, reporting, and automated removal using computer vision, IoT, and GPS tagging with ML for risk prediction.</p></div>
+                </div>
+            </div>
+
+            <!-- Certifications & Achievements -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin: 2rem 0;">
+                <div class="glass-card" data-aos="fade-right" data-aos-duration="1000">
+                    <h2 class="section-title"><i class="fas fa-certificate"></i> Certifications</h2>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-microchip"></i></div><div class="timeline-content"><h3>Workshop on Artificial Intelligence</h3><p>Microsoft</p><div class="timeline-date">21-23 March 2025</div></div></div>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-palette"></i></div><div class="timeline-content"><h3>Adobe Lightroom Masterclass</h3><p>Udemy</p><div class="timeline-date">Apr 2024</div></div></div>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-robot"></i></div><div class="timeline-content"><h3>Build Generative AI Apps with No-Code Tools</h3><p>Udemy</p><div class="timeline-date">Aug 2025</div></div></div>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-code"></i></div><div class="timeline-content"><h3>C Programming Languages</h3><p>CSE Pathshala</p><div class="timeline-date">June-July 2025</div></div></div>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-magic"></i></div><div class="timeline-content"><h3>Master Generative AI & ChatGPT</h3><p>Udemy</p><div class="timeline-date">Aug 2025</div></div></div>
+                </div>
+                <div class="glass-card" data-aos="fade-left" data-aos-duration="1000">
+                    <h2 class="section-title"><i class="fas fa-trophy"></i> Achievements</h2>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-medal"></i></div><div class="timeline-content"><h3>🏆 1st Place at IIT Ropar's AI Fusion Hackathon</h3><p>Among 1000+ teams, developed innovative solution under strict time challenge</p><div class="timeline-date">07-09 Feb, 2025</div></div></div>
+                    <div class="timeline-item"><div class="timeline-icon"><i class="fas fa-chess-queen"></i></div><div class="timeline-content"><h3>♟️ Grandmaster's Gambit at Cognizance 2025</h3><p>IIT Roorkee's Annual Technical Fest</p><div class="timeline-date">21-23 March, 2025</div></div></div>
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div class="glass-card" data-aos="fade-up" data-aos-duration="1000">
+                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Education</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem;">
+                    <div style="background: rgba(59,130,246,0.08); border-radius: 1rem; padding: 1.2rem;"><h3>🎓 B.Tech Computer Science & Engineering</h3><p>Lovely Professional University, Punjab</p><p><strong>CGPA: 6.67</strong> | August 2023</p></div>
+                    <div style="background: rgba(168,85,247,0.08); border-radius: 1rem; padding: 1.2rem;"><h3>📖 Intermediate (10+2)</h3><p>Noneya 10+2 Govt. High School, East Champaran, Bihar</p><p><strong>77%</strong> | June 2019 - July 2021</p></div>
+                    <div style="background: rgba(16,185,129,0.08); border-radius: 1rem; padding: 1.2rem;"><h3>📚 Matriculation</h3><p>Katahari Public School, West Champaran, Bihar</p><p><strong>85%</strong> | Jan 2017 - May 2019</p></div>
+                </div>
+            </div>
+
+            <footer style="text-align: center; padding: 2rem; border-top: 1px solid rgba(59,130,246,0.2); margin-top: 1rem;">
+                <p><i class="fas fa-envelope"></i> shoaibakhtar3626@gmail.com | <i class="fas fa-phone"></i> +917488972636</p>
+                <p style="margin-top: 0.5rem;"><i class="fab fa-github"></i> github.com/Shoaib3626 | <i class="fab fa-linkedin"></i> linkedin.com/in/shoaib-akhtar-1a9aa3297</p>
+                <p style="margin-top: 1rem; font-size: 0.8rem;">© 2025 Shoaib Akhtar | AI Engineer & Full-Stack Developer</p>
+            </footer>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i> CV Downloaded Successfully!</div>
+
+    <div id="cv-content" style="display: none;">
+        <div style="padding: 40px; font-family: 'Space Grotesk', sans-serif; background: white; max-width: 800px; color: black;">
+            <h1>Shoaib Akhtar</h1>
+            <p>📧 shoaibakhtar3626@gmail.com | 📞 +917488972636</p>
+            <hr><h2>Skills</h2><p><strong>Languages:</strong> Python, C, C++, Java, JavaScript</p><p><strong>Frameworks:</strong> HTML, CSS</p><p><strong>Tools:</strong> Google Colab, scikit-learn, TensorFlow, MySQL</p><p><strong>Soft Skills:</strong> Teamwork, Leadership, Adaptability, Creativity, Reliability, Time Management</p>
+            <hr><h2>Projects</h2><p><strong>Real-Time Process Monitoring Dashboard</strong> (Jan-Mar 2025) - Python, Psutil, Tkinter, Matplotlib</p><p><strong>Property Maintenance Platform</strong> (July-Aug 2025) - Python, HTML/CSS, JS, MySQL</p><p><strong>PashuScan</strong> (Jan-Mar 2025) - OpenCV, TensorFlow, IoT, Google Maps API</p>
+            <hr><h2>Certifications</h2><p>Microsoft AI Workshop | Adobe Lightroom | GenAI with No-Code | C Programming | Master Generative AI</p>
+            <hr><h2>Achievements</h2><p>🥇 1st Place IIT Ropar AI Fusion Hackathon | Participant IIT Roorkee Cognizance</p>
+            <hr><h2>Education</h2><p>B.Tech CSE - LPU (CGPA: 6.67) | Intermediate: 77% | Matriculation: 85%</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ once: false, offset: 100, duration: 800, easing: 'ease-out-cubic' });
+        
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const follower = document.querySelector('.cursor-follower');
+        const glow = document.querySelector('.cursor-glow');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        });
+        
+        // Rotating Text Animation
+        const texts = ['AI ENGINEER', 'ML ENTHUSIAST', 'FULL-STACK DEV', 'HACKATHON WINNER'];
+        let idx = 0;
+        setInterval(() => {
+            idx = (idx + 1) % texts.length;
+            document.getElementById('rotating-text').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('rotating-text').textContent = texts[idx];
+                document.getElementById('rotating-text').style.opacity = '1';
+            }, 200);
+        }, 2500);
+        
+        // 3D Background with Advanced Particles
+        const canvas = document.getElementById('canvas-bg');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Floating Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2500;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorsArray = new Float32Array(particlesCount * 3);
+        for(let i = 0; i < particlesCount; i++) {
+            posArray[i*3] = (Math.random() - 0.5) * 300;
+            posArray[i*3+1] = (Math.random() - 0.5) * 200;
+            posArray[i*3+2] = (Math.random() - 0.5) * 100 - 30;
+            colorsArray[i*3] = Math.random() * 0.5 + 0.3;
+            colorsArray[i*3+1] = Math.random() * 0.3 + 0.2;
+            colorsArray[i*3+2] = Math.random() * 0.8 + 0.2;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        // Rotating Torus Knot
+        const knotGeometry = new THREE.TorusKnotGeometry(8, 1.5, 200, 16, 3, 4);
+        const knotMaterial = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true, transparent: true, opacity: 0.12 });
+        const knot = new THREE.Mesh(knotGeometry, knotMaterial);
+        scene.add(knot);
+        
+        camera.position.z = 45;
+        
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+        
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            particles.rotation.y += 0.0005;
+            particles.rotation.x += 0.0003;
+            knot.rotation.x += 0.005;
+            knot.rotation.y += 0.008;
+            knot.rotation.z += 0.003;
+            knot.position.x = mouseX * 2;
+            knot.position.y = -mouseY * 2;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Download CV
+        const downloadBtn = document.getElementById('downloadCVBtn');
+        const toast = document.getElementById('toast');
+        downloadBtn.addEventListener('click', async function() {
+            const original = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating...';
+            downloadBtn.disabled = true;
+            const cv = document.getElementById('cv-content');
+            await html2pdf().set({ margin: 0.5, filename: 'Shoaib_Akhtar_CV.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } }).from(cv).save();
+            downloadBtn.innerHTML = original;
+            downloadBtn.disabled = false;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        });
+        
+        // GSAP Scroll Animations
+        gsap.registerPlugin(ScrollTrigger);
+        
+        gsap.from('.hero-left', { duration: 1.2, x: -100, opacity: 0, ease: 'power3.out' });
+        gsap.from('.profile-wrapper', { duration: 1.2, scale: 0, opacity: 0, delay: 0.3, ease: 'back.out(1.2)' });
+        gsap.from('.badge', { duration: 0.8, y: -30, opacity: 0, delay: 0.5 });
+        
+        // Parallax Effect on Scroll
+        gsap.to('.profile-wrapper', {
+            scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1 },
+            y: 100,
+            opacity: 0.8,
+            ease: 'none'
+        });
+    </script>
+</body>
+</html>
